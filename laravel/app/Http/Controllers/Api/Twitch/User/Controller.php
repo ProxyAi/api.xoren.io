@@ -4,107 +4,142 @@ namespace App\Http\Controllers\Api\Twitch\User;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\JsonResponse;
 
 class Controller extends \App\Http\Controllers\Controller
 {
+    private const TWITCH_GQL_URL = 'https://gql.twitch.tv/gql';
+    private const TWITCH_CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko';
+
     public function __invoke(Request $request, string $username): JsonResponse
     {
         try {
-            $tokenResponse = Http::asForm()->post('https://id.twitch.tv/oauth2/token', [
-                'client_id' => config('services.twitch.client_id'),
-                'client_secret' => config('services.twitch.client_secret'),
-                'grant_type' => 'client_credentials',
+            // Clean the username - remove trailing slashes and spaces
+            $username = trim($username, "/ \t\n\r\0\x0B");
+            
+            // Query for full user data following the documented structure
+            $query = <<<GQL
+            query {
+                user(login: "{$username}") {
+                    id
+                    login
+                    displayName
+                    description
+                    createdAt
+                    roles {
+                        isPartner
+                        isAffiliate
+                    }
+                    profileImageURL(width: 300)
+                    offlineImageURL
+                    lastBroadcast {
+                        title
+                        game {
+                            name
+                        }
+                    }
+                    stream {
+                        id
+                        title
+                        type
+                        viewersCount
+                        createdAt
+                        game {
+                            name
+                        }
+                    }
+                }
+            }
+            GQL;
+
+            // Make GraphQL request
+            $response = Http::withHeaders([
+                'Client-ID' => self::TWITCH_CLIENT_ID,
+                'Content-Type' => 'application/json',
+            ])->post(self::TWITCH_GQL_URL, [
+                'query' => $query,
+                'variables' => (object)[]
             ]);
 
-            if (!$tokenResponse->successful()) {
+            if (!$response->successful()) {
                 return response()->json([
-                    'error' => 'Failed to authenticate with Twitch',
-                    'details' => $tokenResponse->json(),
+                    'error' => 'Failed to fetch Twitch data',
+                    'details' => $response->json()
                 ], 500);
             }
 
-            $accessToken = $tokenResponse->json()['access_token'];
-            $headers = [
-                'Client-ID' => config('services.twitch.client_id'),
-                'Authorization' => 'Bearer ' . $accessToken,
-            ];
+            $data = $response->json();
 
-            // Get user data first
-            $userResponse = Http::withHeaders($headers)
-                ->get("https://api.twitch.tv/helix/users", [
-                    'login' => $username,
-                ]);
-
-            if (!$userResponse->successful()) {
+            // Validate response structure
+            if (!isset($data['data'])) {
                 return response()->json([
-                    'error' => 'Failed to fetch user data',
-                    'details' => $userResponse->json(),
+                    'error' => 'Invalid response format',
+                    'details' => $data
                 ], 500);
             }
 
-            $userData = $userResponse->json();
-            
-            if (empty($userData['data'])) {
+            // Check if user exists
+            if (empty($data['data']['user'])) {
                 return response()->json([
-                    'error' => 'User not found',
+                    'error' => 'User not found'
                 ], 404);
             }
 
-            $user = $userData['data'][0];
-            
-            // Get stream data
-            $streamResponse = Http::withHeaders($headers)
-                ->get("https://api.twitch.tv/helix/streams", [
-                    'user_id' => $user['id'],
-                ]);
+            $user = $data['data']['user'];
 
-            if (!$streamResponse->successful()) {
+            // Fall back to basic stream status if we hit any issues
+            try {
                 return response()->json([
-                    'error' => 'Failed to fetch stream data',
-                    'details' => $streamResponse->json(),
-                ], 500);
+                    'user' => [
+                        'id' => $user['id'],
+                        'login' => $user['login'],
+                        'display_name' => $user['displayName'],
+                        'type' => $user['roles']['isPartner'] ? 'partner' : 
+                                ($user['roles']['isAffiliate'] ? 'affiliate' : ''),
+                        'description' => $user['description'],
+                        'profile_image_url' => $user['profileImageURL'],
+                        'offline_image_url' => $user['offlineImageURL'],
+                        'created_at' => $user['createdAt']
+                    ],
+                    'channel' => [
+                        'broadcaster_language' => 'en',
+                        'game_name' => $user['lastBroadcast']['game']['name'] ?? null,
+                        'title' => $user['lastBroadcast']['title'] ?? null
+                    ],
+                    'stream' => [
+                        'is_live' => !empty($user['stream']),
+                        'data' => $user['stream'] ? [
+                            'id' => $user['stream']['id'],
+                            'game_name' => $user['stream']['game']['name'],
+                            'title' => $user['stream']['title'],
+                            'viewer_count' => $user['stream']['viewersCount'],
+                            'started_at' => $user['stream']['createdAt'],
+                            'thumbnail_url' => sprintf(
+                                'https://static-cdn.jtvnw.net/previews-ttv/live_user_%s-{width}x{height}.jpg',
+                                strtolower($user['login'])
+                            )
+                        ] : null
+                    ]
+                ]);
+            } catch (\Exception $e) {
+                // If we hit any issues parsing the full response, just return stream status
+                return response()->json([
+                    'is_live' => !empty($user['stream']),
+                    'stream_id' => $user['stream']['id'] ?? null
+                ]);
             }
 
-            $streamData = $streamResponse->json();
-
-            // Get channel information
-            $channelResponse = Http::withHeaders($headers)
-                ->get("https://api.twitch.tv/helix/channels", [
-                    'broadcaster_id' => $user['id'],
-                ]);
-
-            if (!$channelResponse->successful()) {
-                return response()->json([
-                    'error' => 'Failed to fetch channel data',
-                    'details' => $channelResponse->json(),
-                ], 500);
-            }
-
-            $channelData = $channelResponse->json();
-
-            return response()->json([
-                'user' => [
-                    'id' => $user['id'],
-                    'login' => $user['login'],
-                    'display_name' => $user['display_name'],
-                    'type' => $user['type'],
-                    'broadcaster_type' => $user['broadcaster_type'],
-                    'description' => $user['description'],
-                    'profile_image_url' => $user['profile_image_url'],
-                    'offline_image_url' => $user['offline_image_url'],
-                    'created_at' => $user['created_at'],
-                ],
-                'channel' => $channelData['data'][0] ?? null,
-                'stream' => [
-                    'is_live' => !empty($streamData['data']),
-                    'data' => $streamData['data'][0] ?? null,
-                ],
-            ]);
         } catch (\Exception $e) {
+            logger()->error('Twitch GraphQL API Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'error' => 'An error occurred',
                 'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ], 500);
         }
     }
