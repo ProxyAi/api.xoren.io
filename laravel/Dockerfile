@@ -128,8 +128,6 @@ WORKDIR /var/www
 
 USER $APP_USER
 
-RUN npm install --save-dev chokidar
-
 # Expose the ports that Octane is using.
 EXPOSE $SWOOLE_PORT
 
