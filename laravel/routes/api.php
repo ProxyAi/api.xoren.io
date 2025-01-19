@@ -3,6 +3,9 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+
+Route::pattern('username', '^[a-zA-Z0-9._-]+$');
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -17,3 +20,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+
+Route::get('/twitch/{username}', \App\Http\Controllers\Api\Twitch\User\Controller::class);
