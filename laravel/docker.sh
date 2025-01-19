@@ -84,14 +84,19 @@ _config_php_ports() {
     PHP_CONFIG_ZZ_DOCKER=/usr/local/etc/php-fpm.d/zz-docker.conf
 
     # Replace user and group in docker.conf
-    sed -i 's/^\(user\s*=\s*\).*$/\1'"${APP_USER:-laravel}"'/; s/^\(group\s*=\s*\).*$/\1'"${APP_USER:-laravel}"'/' "$PHP_CONFIG_DOCKER"
+    if [[ -f "$PHP_CONFIG_DOCKER" ]]; then
+        sed -i 's/^\(user\s*=\s*\).*$/\1'"${APP_USER:-laravel}"'/; s/^\(group\s*=\s*\).*$/\1'"${APP_USER:-laravel}"'/' "$PHP_CONFIG_DOCKER"
+    fi
 
     # Replace listen address in www.conf
-    sed -i 's/^\(listen\s*=\s*\).*$/\1'"127.0.0.1:${SWOOLE_PORT:-9000}"'/' "$PHP_CONFIG_WWW"
+    if [[ -f "$PHP_CONFIG_WWW" ]]; then
+        sed -i 's/^\(listen\s*=\s*\).*$/\1'"127.0.0.1:${PHP_PORT:-9000}"'/' "$PHP_CONFIG_WWW"
+    fi
 
     # Replace listen port in zz-docker.conf
-    sed -i 's/^\(listen\s*=\s*\).*$/\1'"${SWOOLE_PORT:-9000}"'/' "$PHP_CONFIG_ZZ_DOCKER"
-
+    if [[ -f "$PHP_CONFIG_ZZ_DOCKER" ]]; then
+        sed -i 's/^\(listen\s*=\s*\).*$/\1'"${PHP_PORT:-9000}"'/' "$PHP_CONFIG_ZZ_DOCKER"
+    fi
 }
 
 # Production mode
@@ -115,12 +120,12 @@ if [[ "${APP_ENV:-local}" != "local" ]]; then
 
     TRUES=(true 'true' "true" "True" "TRUE")
 
-    for val in "${TRUES[@]}"; do
-        if [[ "${SWOOLE_WATCH:-false}" == "$val" ]]; then
-            SWOOLE_CMD=${SWOOLE_CMD}" --watch"
-            break
-        fi
-    done
+    # for val in "${TRUES[@]}"; do
+    #     if [[ "${SWOOLE_WATCH:-false}" == "$val" ]]; then
+    #         SWOOLE_CMD=${SWOOLE_CMD}" --watch"
+    #         break
+    #     fi
+    # done
 
     sed -i '/\[program:laravel\]/,/\[/{/^command =/s#\(^command = \).*#\1'"$SWOOLE_CMD"'#}' "$SUPERVISORD_CONF"
 

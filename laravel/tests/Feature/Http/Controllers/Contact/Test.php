@@ -4,9 +4,8 @@ namespace Tests\Feature\Http\Controllers\Contact;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
 
-class ContactTest extends TestCase
+class Test extends \Tests\TestCase
 {
     use RefreshDatabase, WithFaker;
     /**

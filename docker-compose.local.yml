@@ -219,7 +219,7 @@ services:
       context: ./mysql
       dockerfile: Dockerfile
       args:
-        MYSQL_VERSION: ${MYSQL_VERSION:-8}
+        MYSQL_VERSION: ${MYSQL_VERSION:-8.0.39-30}
         APP_ENV: "${APP_ENV:-local}"
         TZ: "${APP_TIMEZONE:-Europe/London}"
         LANG: "${LANG:-en_GB}"

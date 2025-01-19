@@ -28,6 +28,9 @@ services:
       XDEBUG_MODE: 'off'
       XDEBUG_CONFIG: 'client_host=host.docker.internal'
     volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/default/locale:/etc/default/locale:ro
+      - /etc/locale.gen:/etc/locale.gen:ro
       - ./laravel:/var/www
       - ./php/php-ini-overrides.ini:/usr/local/etc/php/php.ini
     networks:
@@ -64,6 +67,10 @@ services:
       CORS_CREDENTIALS: "true"
       TZ: "${APP_TIMEZONE:-Europe/London}"
       LANG: "${APP_ENCODE:-en_GB}"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/default/locale:/etc/default/locale:ro
+      - /etc/locale.gen:/etc/locale.gen:ro
     networks:
         - DOCKER_BRIDGE
     depends_on: 

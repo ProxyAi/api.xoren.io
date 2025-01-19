@@ -3,7 +3,7 @@
 # Base image
 FROM php:fpm
 
-MAINTAINER John J <john@xoren.io>
+LABEL maintainer="John J <john@xoren.io>"
 
 # Build arguments.
 ARG APP_ENV=${APP_ENV:-local}
@@ -21,7 +21,7 @@ ARG LANG=en_GB
 ARG LCFILE=/etc/default/locale
 ARG LGFILE=/etc/locale.gen
 
-ARG NODE_VERSION=${NODE_VERSION:-20}
+ARG NODE_VERSION=${NODE_VERSION:-22}
 ARG SWOOLE_PORT=${SWOOLE_PORT:-8000}
 
 # Environment variables.
@@ -74,9 +74,9 @@ RUN echo "$TZ" > /etc/timezone && \
 RUN dpkg-reconfigure --frontend noninteractive tzdata && locale-gen "${LANG}.UTF-8 .UTF-8" && update-locale
 
 # Install PHP extensions.
-RUN docker-php-ext-install pdo_mysql ctype exif pcntl bcmath && \
+RUN docker-php-ext-install pdo_mysql gd ctype exif pcntl bcmath && \
     pecl install redis zip csv swoole && \
-    docker-php-ext-enable redis zip csv swoole
+    docker-php-ext-enable redis zip gd csv swoole
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
