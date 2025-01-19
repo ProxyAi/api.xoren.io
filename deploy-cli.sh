@@ -15,11 +15,7 @@
 #   - <John J> admin@xoren.io
 #
 # Links:
-#   - https://github.com/xorenio
-#
-# Dependencies:
-#   - Requires OpenSSL for generating Diffie-Hellman parameters and SSL certificate.
-#   - Requires nc (netcat) for checking if Laravel is running.
+#   - https://github.com/xorenio/deploy-cli.sh
 #
 #######################################################################
 
@@ -59,6 +55,7 @@ GITHUB_REPO_OWNER=$(git remote get-url origin | sed -n 's/.*github.com:\([^/]*\)
 GITHUB_REPO_URL="https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GIT_REPO_NAME}/commits"
 
 SCRIPT_LOG_FILE="${SCRIPT_DIR}/${SCRIPT_NAME}.log"
+SCRIPT_LOG_EMAIL_FILE=${SCRIPT_LOG_EMAIL_FILE:-"$HOME/${SCRIPT_NAME}.mail.log"}
 JSON_FILE_NAME="${SCRIPT_DIR}/${SCRIPT_NAME}_${NOWDATESTAMP}.json"
 SCRIPT_RUNNING_FILE="$HOME/${GIT_REPO_NAME}_running.txt"
 
@@ -73,8 +70,13 @@ WORKING_SCHEDULE=false
 # END - Script setup and configs
 
 # START - IMPORT FUNCTIONS
-
-source "$SCRIPT_DIR/_functions.sh"
+if [[ -f "${SCRIPT_DIR}/.${SCRIPT_NAME}/_functions.sh" ]]; then
+    # shellcheck source=.deploy-cli/_functions.sh
+    source "${SCRIPT_DIR}/.${SCRIPT_NAME}/_functions.sh"
+else
+    echo "[ERROR] Missing _functions.sh"
+    exit
+fi
 
 # END - IMPORT FUNCTIONS
 
@@ -90,14 +92,16 @@ else
     SCRIPT_DEBUG=true
 fi
 
-if [[ "$(_is_present curl)" != "1" ]]; then
-    _log_error "Please install curl."
-    exit
-fi
+if [[ "$DEBIAN_FRONTEND" != "noninteractive" ]]; then
+    if [[ "$(_is_present curl)" != "1" ]]; then
+        _log_error "Please install curl."
+        exit
+    fi
 
-if [[ "$(_is_present jq)" != "1" ]]; then
-    _log_error "Please install jq."
-    exit
+    if [[ "$(_is_present jq)" != "1" ]]; then
+        _log_error "Please install jq."
+        exit
+    fi
 fi
 
 # if [[ "$DEPLOYMENT_ENV_LOCATION" = "true" && "$(_is_present whois)" != "1" ]]; then
@@ -122,8 +126,9 @@ _check_running_file
 _create_running_file
 
 ## CHECK FOR PROJECT VAR FILE
-_check_project_secrets
-
+if [[ "$DEBIAN_FRONTEND" != "noninteractive" ]]; then
+    _check_project_secrets
+fi
 ## SET DEPLOY ENV VAR TO LOCATION
 if [[ "$DEPLOYMENT_ENV_LOCATION" = "true" ]]; then
     _set_location_var
@@ -162,17 +167,28 @@ replace:env                                 Replace env file vars from secrets.
 write:secrets                               Create secrets file outside of repo.
 write:token:github                          To setup the local GitHub token.
 write:token:onedev                          To setup the local Onedev token.
+
 EOF
+    if [[ -n "$(type -t __display_info_extras)" ]]; then
+        __display_info_extras
+    fi
 }
 
 # START - SCRIPT RUNTIME
 
 ## Command line argument
 if [[ ${#SCRIPT_CMD_ARG} -ge 1 ]]; then
-    case "${SCRIPT_CMD_ARG[0]}" in
-    "setup")
+    if [[ -n "$(type -t __extras_options)" ]]; then
+        __extras_options
+    fi
+    case "${SCRIPT_CMD_ARG[0],,}" in
+    "setup" | "deploy")
         _setup
         ;;
+    "install:linux")
+        _install_linux_dep
+        ;;
+
     "version:check" | "v:check" | "check")
         LATEST_PROJECT_SHA="$(_set_latest_sha true)"
 
@@ -192,7 +208,20 @@ if [[ ${#SCRIPT_CMD_ARG} -ge 1 ]]; then
         # _log_info "======================="
         # _log_info "\/ Manual re-install \/"
         # _log_info "======================="
-        _update
+        _update "${FUNCTION_ARG[@]}"
+        ;;
+    "version:post" | "v:post" | "post_update")
+        # _log_info ""
+        # _log_info "======================="
+        # _log_info "\/ Manual post run   \/"
+        # _log_info "======================="
+        if [[ -f "${SCRIPT_DIR}/.${SCRIPT_NAME}/_update.sh" ]]; then
+            # shellcheck source=_update.sh
+            source "${SCRIPT_DIR}/.${SCRIPT_NAME}/_update.sh"
+        fi
+        if [[ -n "$(type -t _post_update)" ]]; then
+            _post_update
+        fi
         ;;
     "replace:env")
         _replace_env_project_secrets

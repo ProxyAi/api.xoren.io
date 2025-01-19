@@ -1,10 +1,48 @@
 #!/bin/bash
 
+# Author: admin@xoren.io
+# Script: _update.sh
+# Link https://github.com/xorenio/deploy-cli.sh
+# Description: Functions script.
+
+# Script variables
+NOWDATESTAMP="${NOWDATESTAMP:-$(date "+%Y-%m-%d_%H-%M-%S")}"
+
+SCRIPT="${SCRIPT:-$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")}"
+SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "$0")" && pwd)}"
+SCRIPT_DIR_NAME="${SCRIPT_DIR_NAME:-$(basename "$PWD")}"
+SCRIPT_DEBUG=${SCRIPT_DEBUG:-false}
+
+# Deployment environment
+DEPLOYMENT_ENV=${DEPLOYMENT_ENV:-"production"}
+
+# Enable location targeted deployment
+DEPLOYMENT_ENV_LOCATION=${DEPLOYMENT_ENV_LOCATION:-false}
+
+# Deployment location
+ISOLOCATION=${ISOLOCATION:-"GB"}
+ISOSTATELOCATION=${ISOSTATELOCATION:-""}
+
+# Git repo name
+GIT_REPO_NAME="${GIT_REPO_NAME:-$(basename "$(git rev-parse --show-toplevel)")}"
+
+# if using GitHub, Github Details if not ignore
+GITHUB_REPO_OWNER="${GITHUB_REPO_OWNER:-$(git remote get-url origin | sed -n 's/.*github.com:\([^/]*\)\/.*/\1/p')}"
+GITHUB_REPO_URL="${GITHUB_REPO_URL:-"https://api.github.com/repos/$GITHUB_REPO_OWNER/$GIT_REPO_NAME/commits"}"
+
 # START - IMPORT FUNCTIONS
-if [[ ! -n "$(type -t _exit_script)" ]]; then
-    source _functions.sh
+if [[ ! -n "$(type -t _registered)" ]]; then
+    if [[ -f "${SCRIPT_DIR}/.${SCRIPT_NAME}/_functions.sh" ]]; then
+        # shellcheck source=_functions.sh
+        source "${SCRIPT_DIR}/.${SCRIPT_NAME}/_functions.sh"
+    fi
 fi
 # END - IMPORT FUNCTIONS
+
+_registered_update() {
+    # This is used for checking is _update.sh has been imported or not
+    return 0
+}
 
 # Function: __move_laravel_app_storage_folder
 # Description: Private function to move the storage folder for Laravel.
@@ -96,15 +134,21 @@ _post_update() {
     local docker_compose_file="0"
     docker_compose_file="$(_get_project_docker_compose_file)"
 
-    sync
-
     if [[ ! -f "$HOME/${GIT_REPO_NAME}/laravel/.env" ]]; then
         cp "$HOME/${GIT_REPO_NAME}/.env" "$HOME/${GIT_REPO_NAME}/laravel/.env"
-        sync "$HOME/${GIT_REPO_NAME}/laravel/.env"
     fi
-    chmod 770 "$HOME/${GITHUB_REPO_NAME}/laravel/.env"
+    chmod 770 "$HOME/${GIT_REPO_NAME}/laravel/.env"
+
+    if [[ ! -f "$HOME/${GIT_REPO_NAME}/app/.env" ]]; then
+        cp "$HOME/${GIT_REPO_NAME}/.env" "$HOME/${GIT_REPO_NAME}/app/.env"
+    fi
+    chmod 770 "$HOME/${GIT_REPO_NAME}/app/.env"
 
     _log_info "Finished updated project files."
+    if [[ -f "$HOME/gindex/id_ed25519" ]]; then
+        cp "$HOME/gindex/id_ed25519" "$HOME/${GIT_REPO_NAME}/laravel/gindex"
+        cp "$HOME/gindex/id_ed25519.pub" "$HOME/${GIT_REPO_NAME}/laravel/gindex.pub"
+    fi
 
     if [[ ! -f "$HOME/${GIT_REPO_NAME}/laravel/public/storage" ]]; then
         ln -s /var/www/storage/app/public "$HOME/${GIT_REPO_NAME}/laravel/public/storage"
