@@ -21,5 +21,3 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-
-Route::get('/twitch/{username}', \App\Http\Controllers\Api\Twitch\User\Controller::class);
