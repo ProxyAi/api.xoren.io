@@ -1,35 +1,38 @@
-FROM redis:bullseye
+FROM valkey/valkey:8.0-bookworm
 
 # Build arguments.
-ARG APP_TIMEZONE=Europe/London
-ARG APP_ENCODE=en_GB
+ARG TZ=Europe/London
+# ARG LANG=en_US
 ARG LCFILE=/etc/default/locale
 ARG LGFILE=/etc/locale.gen
 
 # Environment variables.
 ENV DEBIAN_FRONTEND noninteractive
-ENV TZ ${APP_TIMEZONE}
-ENV LANG ${APP_ENCODE}.UTF-8
-ENV LANGUAGE ${APP_ENCODE}.UTF-8
-ENV LC_ALL ${APP_ENCODE}.UTF-8
+
+# Set timezone.
+ENV TZ ${TZ}
+
+# Set locale settings.
+# ENV LANG ${LANG}
+# ENV LANGUAGE ${LANG}.UTF-8
+# ENV LC_ALL ${LANG}.UTF-8
 
 # Update and upgrade system packages, then install required system packages.
 RUN apt-get update && apt-get install -y -q \
 apt-utils dialog locales tzdata ca-certificates
 
 # Set timezone and localization.
-RUN ln -snf /usr/share/zoneinfo/${APP_TIMEZONE} /etc/localtime && \
-    echo "$APP_TIMEZONE" > /etc/timezone && \
-    echo "en_US.UTF-8 UTF-8" > $LGFILE && \
-    echo ${APP_ENCODE}".UTF-8 UTF-8" >> $LGFILE && \
-    echo "LANG="${APP_ENCODE}".UTF-8" > $LCFILE && \
-    for lc_var in ADDRESS IDENTIFICATION MEASUREMENT MONETARY NAME NUMERIC PAPER TELEPHONE TIME; \
-    do echo "LC_${lc_var}=${APP_ENCODE}.UTF-8" >> $LCFILE; done && \
-    dpkg-reconfigure --frontend noninteractive tzdata && locale-gen ${APP_ENCODE}.UTF-8 && update-locale
+# RUN ln -snf /usr/share/zoneinfo/${APP_TIMEZONE} /etc/localtime && \
+# RUN echo "$APP_TIMEZONE" > /etc/timezone && \
+#     echo "en_US.UTF-8 UTF-8" > $LGFILE && \
+#     echo ${APP_ENCODE}".UTF-8 UTF-8" >> $LGFILE && \
+#     echo "LANG="${APP_ENCODE}".UTF-8" > $LCFILE && \
+#     for lc_var in ADDRESS IDENTIFICATION MEASUREMENT MONETARY NAME NUMERIC PAPER TELEPHONE TIME; \
+#     do echo "LC_${lc_var}=${APP_ENCODE}.UTF-8" >> $LCFILE; done
+# RUN dpkg-reconfigure --frontend noninteractive tzdata && locale-gen ${APP_ENCODE}.UTF-8 && update-locale
 
 # For security settings uncomment, make the dir, copy conf, and also start with the conf, to use it
-# RUN mkdir -p /usr/local/etc/redis
-# COPY redis.conf /usr/local/etc/redis/redis.conf
+# COPY valkey.conf /usr/local/etc/valkey/valkey.conf
 
 # https://askubuntu.com/questions/1225410/my-ubuntu-server-has-been-infected-by-a-virus-kdevtmpfsi
 # RUN touch /tmp/kdevtmpfsi && chmod 000 /tmp/kdevtmpfsi && touch /tmp/zzz && chmod 000 /tmp/zzz \
@@ -55,4 +58,6 @@ VOLUME /data
 
 EXPOSE 6379
 
-CMD ["redis-server"]
+CMD ["valkey-server", "--port 6379", "--bind 0.0.0.0"]
+# CMD ["valkey-server", "/usr/local/etc/valkey/valkey.conf"]
+ # "/usr/local/etc/redis/redis.conf"]

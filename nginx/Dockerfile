@@ -1,7 +1,5 @@
 FROM nginx:alpine
 
-LABEL maintainer="John J <john@xoren.io>"
-
 # Build arguments.
 ARG TZ=Europe/London
 ARG LANG=en_GB

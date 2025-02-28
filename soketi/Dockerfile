@@ -1,7 +1,5 @@
 FROM quay.io/soketi/soketi:latest-16-debian
 
-LABEL maintainer="John J <john@xoren.io>"
-
 # Build arguments.
 ARG APP_TIMEZONE=Europe/London
 ARG APP_ENCODE=en_GB

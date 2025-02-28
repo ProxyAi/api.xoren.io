@@ -157,7 +157,7 @@ case "${CONTAINER_ROLE:-laravel}" in
         /usr/local/bin/php -d variables_order=EGPCS /var/www/artisan octane:start \
             --server=swoole \
             --host=0.0.0.0 \
-            --port=${SWOOLE_PORT:-8000} \
+            --port=${SWOOLE_PORT:-9000} \
             --workers=${SWOOLE_WORKERS:-auto} \
             --task-workers=${SWOOLE_TASK_WORKERS:-auto} \
             --max-requests=${SWOOLE_MAX_REQUESTS:-500}
@@ -165,7 +165,7 @@ case "${CONTAINER_ROLE:-laravel}" in
         /usr/local/bin/php -d variables_order=EGPCS /var/www/artisan octane:start \
             --server=swoole \
             --host=0.0.0.0 \
-            --port=${SWOOLE_PORT:-8000} \
+            --port=${SWOOLE_PORT:-9000} \
             --workers=${SWOOLE_WORKERS:-auto} \
             --task-workers=${SWOOLE_TASK_WORKERS:-auto} \
             --max-requests=${SWOOLE_MAX_REQUESTS:-500} \

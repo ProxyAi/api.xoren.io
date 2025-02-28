@@ -1,8 +1,6 @@
 ARG MYSQL_VERSION
 FROM percona:${MYSQL_VERSION:-8}
 
-LABEL maintainer="John J <john@xoren.io>"
-
 # Build arguments.
 ARG APP_ENV=production
 ARG TZ=Europe/London

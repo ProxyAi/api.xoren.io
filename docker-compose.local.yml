@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
   laravel:
     image: xoren-io-laravel
@@ -40,7 +38,7 @@ services:
     networks:
       - DOCKER_BRIDGE
     depends_on:
-      - redis
+      - valkey
       - websocket
     ports:
       - ${SWOOLE_PORT:-8000}:${SWOOLE_PORT:-8000}
@@ -159,7 +157,7 @@ services:
       DEBUG: 'true'
       SOKETI_DEBUG: '1'
       METRICS_SERVER_PORT: '9601'
-      DB_REDIS_HOST: redis
+      DB_REDIS_HOST: valkey
       DB_REDIS_PORT: 6379
       DB_REDIS_DB: 3
       CORS_ALLOW_HEADERS: "*"
@@ -245,11 +243,11 @@ services:
       retries: 3
       timeout: 5s
 
-  redis:
-    image: xoren-io-redis
-    container_name: xoren-io-redis-local
+  valkey:
+    image: xoren-io-valkey
+    container_name: xoren-io-valkey-local
     build:
-      context: ./redis
+      context: ./valkey
       dockerfile: Dockerfile
       args:
         APP_ENV: "${APP_ENV:-local}"
@@ -268,14 +266,14 @@ services:
       - /etc/default/locale:/etc/default/locale:ro
       - /etc/locale.gen:/etc/locale.gen:ro
       - 'REDIS_VOLUME:/data'
-    ports:
-      - '${FORWARD_REDIS_PORT:-6379}:6379'
     networks:
       - DOCKER_BRIDGE
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      retries: 3
-      timeout: 5s
+    ports:
+      - '${FORWARD_REDIS_PORT:-6379}:6379'
+    # healthcheck:
+    #   test: ["CMD", "redis-cli", "ping"]
+    #   retries: 3
+    #   timeout: 5s
 
 networks:
   DOCKER_BRIDGE:

@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
   laravel:
     image: xoren-io-laravel
@@ -36,7 +34,7 @@ services:
     networks:
       - DOCKER_BRIDGE
     depends_on:
-      - redis
+      - valkey
       - websocket
 
   websocket:
@@ -57,7 +55,7 @@ services:
       DEFALT_APP_SECRET: ${PUSHER_APP_SECRET:-app-secret}
       SOKETI_DEBUG: '1'
       METRICS_SERVER_PORT: '9601'
-      DB_REDIS_HOST: redis
+      DB_REDIS_HOST: valkey
       DB_REDIS_PORT: 6379
       DB_REDIS_DB: 3
       CORS_ALLOW_HEADERS: "*"
@@ -74,7 +72,7 @@ services:
     networks:
         - DOCKER_BRIDGE
     depends_on: 
-      - redis
+      - valkey
 
   nginx:
     image: xoren-io-nginx
@@ -108,12 +106,12 @@ services:
     networks:
       - DOCKER_BRIDGE
 
-  redis:
-    image: xoren-io-redis
-    container_name: xoren-io-redis
+  valkey:
+    image: xoren-io-valkey
+    container_name: xoren-io-valkey
     restart: unless-stopped
     build:
-      context: ./redis
+      context: ./valkey
       dockerfile: Dockerfile
       args:
         APP_ENV: "${APP_ENV:-production}"
@@ -131,10 +129,10 @@ services:
       - 'REDIS_VOLUME:/data' ## save in vm
     networks:
       - DOCKER_BRIDGE
-    healthcheck:
-        test: ["CMD", "redis-cli", "ping"]
-        retries: 3
-        timeout: 5s
+    # healthcheck:
+    #     test: ["CMD", "redis-cli", "ping"]
+    #     retries: 3
+    #     timeout: 5s
 
 
 networks:

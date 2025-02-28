@@ -1,9 +1,5 @@
-# FROM php:8.2-fpm
-
 # Base image
 FROM php:fpm
-
-LABEL maintainer="John J <john@xoren.io>"
 
 # Build arguments.
 ARG APP_ENV=${APP_ENV:-local}
