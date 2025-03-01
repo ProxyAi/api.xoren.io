@@ -116,14 +116,14 @@ services:
       args:
         APP_ENV: "${APP_ENV:-production}"
         TZ: "${APP_TIMEZONE:-Europe/London}"
-        LANG: "${APP_ENCODE:-en_GB}"
+        # LANG: "${APP_ENCODE:-en_GB}"
     env_file: ./.env
     environment:
       TZ: "${APP_TIMEZONE:-Europe/London}"
-      LANG: "${APP_ENCODE:-en_GB}"
+      # LANG: "${APP_ENCODE:-en_GB}"
     volumes:
       - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
+      # - /etc/localtime:/etc/localtime:ro
       - /etc/default/locale:/etc/default/locale:ro
       - /etc/locale.gen:/etc/locale.gen:ro
       - 'REDIS_VOLUME:/data' ## save in vm

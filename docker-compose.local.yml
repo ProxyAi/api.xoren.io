@@ -252,11 +252,11 @@ services:
       args:
         APP_ENV: "${APP_ENV:-local}"
         TZ: "${APP_TIMEZONE:-Europe/London}"
-        LANG: "${LANG:-en_GB}"
+        # LANG: "${LANG:-en_GB}"
     env_file: ./.env
     environment:
       TZ: "${APP_TIMEZONE:-Europe/London}"
-      LANG: "${APP_ENCODE:-en_GB}"
+      # LANG: "${APP_ENCODE:-en_GB}"
     # # Add the sysctl setting
     # sysctls:
     #   - vm.overcommit_memory=1
@@ -265,7 +265,7 @@ services:
       # - /etc/localtime:/etc/localtime:ro
       - /etc/default/locale:/etc/default/locale:ro
       - /etc/locale.gen:/etc/locale.gen:ro
-      - 'REDIS_VOLUME:/data'
+      - 'VALKEY_VOLUME:/data'
     networks:
       - DOCKER_BRIDGE
     ports:
@@ -282,5 +282,5 @@ networks:
 volumes:
   MYSQL_VOLUME:
     driver: local
-  REDIS_VOLUME:
+  VALKEY_VOLUME:
     driver: local
