@@ -11,7 +11,7 @@
         "laravel/octane": "^2.8.1",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10",
-        "meilisearch/meilisearch-php": "1.13.1",
+        "meilisearch/meilisearch-php": "^1.13.1",
         "pusher/pusher-php-server": "^7.2.7"
     },
     "require-dev": {
