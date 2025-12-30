@@ -134,15 +134,21 @@ _post_update() {
     local docker_compose_file="0"
     docker_compose_file="$(_get_project_docker_compose_file)"
 
-    if [[ ! -f "$HOME/${GIT_REPO_NAME}/laravel/.env" ]]; then
-        cp "$HOME/${GIT_REPO_NAME}/.env" "$HOME/${GIT_REPO_NAME}/laravel/.env"
-    fi
-    chmod 770 "$HOME/${GIT_REPO_NAME}/laravel/.env"
+    if [[ -d "$HOME/${GIT_REPO_NAME}/laravel/" ]]; then
+        if [[ ! -f "$HOME/${GIT_REPO_NAME}/laravel/.env" ]]; then
+            cp "$HOME/${GIT_REPO_NAME}/.env" "$HOME/${GIT_REPO_NAME}/laravel/.env"
+        fi
 
-    if [[ ! -f "$HOME/${GIT_REPO_NAME}/app/.env" ]]; then
-        cp "$HOME/${GIT_REPO_NAME}/.env" "$HOME/${GIT_REPO_NAME}/app/.env"
+        chmod 770 "$HOME/${GIT_REPO_NAME}/laravel/.env"
     fi
-    chmod 770 "$HOME/${GIT_REPO_NAME}/app/.env"
+
+    if [[ -d "$HOME/${GIT_REPO_NAME}/app/" ]]; then
+        if [[ ! -f "$HOME/${GIT_REPO_NAME}/app/.env" ]]; then
+            cp "$HOME/${GIT_REPO_NAME}/.env" "$HOME/${GIT_REPO_NAME}/app/.env"
+        fi
+
+        chmod 770 "$HOME/${GIT_REPO_NAME}/app/.env"
+    fi
 
     _log_info "Finished updated project files."
     if [[ -f "$HOME/gindex/id_ed25519" ]]; then
