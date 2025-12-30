@@ -49,11 +49,11 @@ RUN apt-get update && apt-get upgrade -y -q && \
     apt-get install -y -q apt-utils dialog locales tzdata \
     build-essential ca-certificates cmake curl gnupg default-mysql-client \
     autoconf dpkg-dev dpkg file g++ gcc libc-dev make pkgconf re2c \
-    git glew-utils gosu libcap2-bin libfreetype6-dev libgconf-2-4 \
+    git glew-utils gosu libcap2-bin libfreetype6-dev \
     libglew-dev libjpeg-dev libonig-dev libpng-dev libx11-dev parallel \
     libxcursor-dev libxi6 libxinerama-dev libxml2-dev libxrandr-dev \
     ncat nasm pngquant procps python3 python3-pip libgmp-dev zlib1g-dev \
-    libcsv-dev libzip-dev libzip-dev unzip zip software-properties-common \
+    libcsv-dev libzip-dev libzip-dev unzip zip \
     sqlite3 sudo supervisor wget imagemagick wkhtmltopdf && \
     apt-get install -y -q --no-install-recommends mariadb-client && \
     rm -rf /var/lib/apt/lists/*
@@ -103,8 +103,8 @@ RUN useradd -ms /bin/bash -g $APP_USER_GUID -G users,www-data,sudo -u $APP_USER_
     # } > /etc/sudoers
 
 # Remove packages no longer needed to reduce container size.
-RUN apt-get purge -y git wget g++ gcc make\
-    build-essential cmake software-properties-common && \
+RUN apt-get purge -y g++ gcc make\
+    build-essential cmake && \
     apt-get autoremove -y && apt-get autoclean -y && \
     rm -rf /var/lib/apt/lists/*
 
