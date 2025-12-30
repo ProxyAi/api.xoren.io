@@ -1,5 +1,5 @@
 # Base image
-FROM php:fpm
+FROM php:8.3-fpm
 
 # Build arguments.
 ARG APP_ENV=${APP_ENV:-local}
