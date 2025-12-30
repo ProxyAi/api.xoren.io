@@ -54,7 +54,7 @@ RUN apt-get update && apt-get upgrade -y -q && \
     libxcursor-dev libxi6 libxinerama-dev libxml2-dev libxrandr-dev \
     ncat nasm pngquant procps python3 python3-pip libgmp-dev zlib1g-dev \
     libcsv-dev libzip-dev libzip-dev unzip zip \
-    sqlite3 sudo supervisor wget imagemagick wkhtmltopdf && \
+    sqlite3 sudo supervisor wget imagemagick geoip-bin && \
     apt-get install -y -q --no-install-recommends mariadb-client && \
     rm -rf /var/lib/apt/lists/*
 
