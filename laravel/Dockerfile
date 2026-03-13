@@ -1,5 +1,5 @@
 # Base image
-FROM php:8.3-fpm
+FROM php:8.5-fpm
 
 # Build arguments.
 ARG APP_ENV=${APP_ENV:-local}
@@ -54,7 +54,7 @@ RUN apt-get update && apt-get upgrade -y -q && \
     libxcursor-dev libxi6 libxinerama-dev libxml2-dev libxrandr-dev \
     ncat nasm pngquant procps python3 python3-pip libgmp-dev zlib1g-dev \
     libcsv-dev libzip-dev libzip-dev unzip zip \
-    sqlite3 sudo supervisor wget imagemagick geoip-bin && \
+    sqlite3 sudo supervisor wget imagemagick geoip-bin libssl-dev && \
     apt-get install -y -q --no-install-recommends mariadb-client && \
     rm -rf /var/lib/apt/lists/*
 
@@ -82,7 +82,7 @@ RUN mkdir -p /etc/apt/keyrings && curl -fsSL https://deb.nodesource.com/gpgkey/n
 RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_"${NODE_VERSION}".x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
 RUN apt-get update && apt-get -y -q install nodejs
 
-RUN sed -i 's/UID_MIN\t\t1000/UID_MIN\t\t900/' /etc/login.defs 
+RUN sed -i 's/UID_MIN\t\t1000/UID_MIN\t\t900/' /etc/login.defs
     # && \
     # sed -i 's/UID_MAX\t\t60000/UID_MAX\t\t49999/' /etc/login.defs
 
@@ -91,7 +91,7 @@ RUN groupadd -g $APP_USER_GUID $APP_USER || true
 
 # Create system user
 RUN useradd -ms /bin/bash -g $APP_USER_GUID -G users,www-data,sudo -u $APP_USER_UUID -d /home/$APP_USER $APP_USER && \
-    mkdir -p /home/$APP_USER/.composer /var/www/vendor 
+    mkdir -p /home/$APP_USER/.composer /var/www/vendor
     # && \
     # chown -R $APP_USER:$APP_USER /home/$APP_USER /var/www/vendor && \
     # { \
