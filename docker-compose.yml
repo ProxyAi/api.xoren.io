@@ -72,7 +72,7 @@ services:
       - /etc/locale.gen:/etc/locale.gen:ro
     networks:
         - DOCKER_BRIDGE
-    depends_on: 
+    depends_on:
       - valkey
 
   nginx:
@@ -139,6 +139,11 @@ services:
 networks:
   DOCKER_BRIDGE:
     driver: bridge
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16
+        - subnet: 2001:db8:1::/64
 
 volumes:
   REDIS_VOLUME:
